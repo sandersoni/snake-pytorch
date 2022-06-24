@@ -1,11 +1,11 @@
 # import logging
 # LOGGER = logging.getLogger(__name__)
 
-from multiprocessing import parent_process
+# from multiprocessing import parent_process
 import random
 import math
 import numpy as np
-from sympy import numbered_symbols
+# from sympy import numbered_symbols
 
 random.seed()
 
@@ -24,7 +24,7 @@ class Game:
         
         self.apples = set()
         self.AI_snakes = set()
-
+        self.ML_snake = False
         self.player_snake = False
 
         self.empty_space_persistent = self.whole_space
@@ -50,12 +50,13 @@ class Game:
     #     return empty_space_result
         
     def apple_spawn_locations(self):
-        empty_space_result = self.whole_minus_edges - self.apples
-        for snake in self.AI_snakes:
-            empty_space_result = empty_space_result - set(snake.coords)
-        if self.player_snake is not False:
-            empty_space_result = empty_space_result - set(self.player_snake.coords)
-        return empty_space_result
+        # empty_space_result = self.whole_minus_edges - self.apples
+        # for snake in self.AI_snakes:
+        #     empty_space_result = empty_space_result - set(snake.coords)
+        # if self.player_snake is not False:
+        #     empty_space_result = empty_space_result - set(self.player_snake.coords)
+        # return empty_space_result
+        return self.empty_space_persistent
 
     def make_apple(self):
         self.apples.add(random.choice(tuple(self.apple_spawn_locations())))
@@ -106,6 +107,8 @@ class Game:
 
         if player:
             self.player_snake = new_snake
+        elif algorithm == 'ML':
+            self.ML_snake = new_snake
         else:
             self.AI_snakes.add(new_snake)
 
@@ -114,19 +117,21 @@ class Game:
     def time_step(self):
         # pick AI direction
         for snake in self.AI_snakes:
-            self.pick_direction(snake)
+            if snake:
+                self.pick_direction(snake)
 
 
         # move AI snakes
-        for snake in self.AI_snakes:
-            snake.coords.insert(0, (snake.coords[0][0] + snake.direction[0], snake.coords[0][1] + snake.direction[1]))
-            self.empty_space_persistent = self.empty_space_persistent - set([snake.coords[0]])
-            if snake.coords[0] in self.apples:
-                # print('snake eating apple at ', snake.coords[0], ', new length: ', len(snake.coords))
-                self.apples.remove(snake.coords[0])
-            else:
-                self.empty_space_persistent.add(snake.coords[-1])
-                del snake.coords[-1]
+        for snake in self.AI_snakes.union({self.ML_snake}):
+            if snake:
+                snake.coords.insert(0, (snake.coords[0][0] + snake.direction[0], snake.coords[0][1] + snake.direction[1]))
+                self.empty_space_persistent = self.empty_space_persistent - set([snake.coords[0]])
+                if snake.coords[0] in self.apples:
+                    # print('snake eating apple at ', snake.coords[0], ', new length: ', len(snake.coords))
+                    self.apples.remove(snake.coords[0])
+                else:
+                    self.empty_space_persistent.add(snake.coords[-1])
+                    del snake.coords[-1]
 
         # move player snake
         if self.player_snake is not False:
@@ -138,27 +143,29 @@ class Game:
                 del self.player_snake.coords[-1]
 
         # check for AI collisions
-        for snake in self.AI_snakes:
-            if snake.coords[0][0] < 0 or snake.coords[0][0] >= self.cells_x or snake.coords[0][1] < 0 or snake.coords[0][1] >= self.cells_y:
-                # print('AI wall collision!')
-                snake.dead = True
-
-            for other_snake in self.AI_snakes:
-                if snake != other_snake:
-                    if snake.coords[0] in other_snake.coords:
-                        # print('AI snake collision!')
-                        snake.dead = True
-
-                else:
-                    if snake.coords[0] in snake.coords[1:]:
-                        # print('AI collided with self!')
-                        snake.dead = True
-
-
-            if self.player_snake is not False:
-                if snake[0] in self.player_snake.coords:
-                    # print('AI collided with player!')
+        for snake in self.AI_snakes.union({self.ML_snake}):
+            if snake:
+                if snake.coords[0][0] < 0 or snake.coords[0][0] >= self.cells_x or snake.coords[0][1] < 0 or snake.coords[0][1] >= self.cells_y:
+                    # print('AI wall collision!')
                     snake.dead = True
+
+                for other_snake in self.AI_snakes.union({self.ML_snake}):
+                    if other_snake:
+                        if snake != other_snake:
+                            if snake.coords[0] in other_snake.coords:
+                                # print('AI snake collision!')
+                                snake.dead = True
+
+                        else:
+                            if snake.coords[0] in snake.coords[1:]:
+                                # print('AI collided with self!')
+                                snake.dead = True
+
+
+                if self.player_snake is not False:
+                    if snake[0] in self.player_snake.coords:
+                        # print('AI collided with player!')
+                        snake.dead = True
 
         # check for player collisions
         if self.player_snake is not False:
@@ -200,9 +207,10 @@ class Game:
         if self.player_snake is not False:
             if self.player_snake.dead == True:
                 return True
-        for snake in self.AI_snakes:
-            if snake.dead == True:
-                return True
+        for snake in self.AI_snakes.union({self.ML_snake}):
+            if snake:
+                if snake.dead == True:
+                    return True
 
     def pick_random_direction(self, snake):
         possible_moves = []
@@ -218,6 +226,14 @@ class Game:
             snake.direction = random.choice(possible_moves)
         # else:
         #     print('No possible moves!')
+
+    # This chooses a random direction even if it means running into a wall or self
+    def pick_random_direction_no_safe(self, snake):
+        directions = [(1,0), (-1,0), (0,1), (0,-1)]
+        # prevents going directly backwards
+        directions.remove((-snake.direction[0], -snake.direction[1]))
+        snake.direction = random.choice(directions)
+
 
     def pick_basic_direction(self, snake):
         possible_moves = []
@@ -611,14 +627,19 @@ class Game:
                 # print('Could not use algorithm, using random...')
                 self.pick_random_direction(snake)
 
+    def pick_ML_direction(self, snake):
+        self.pick_random_direction_no_safe(snake)
 
     def pick_direction(self, snake):
-        if snake.algorithm == 'dumb_v2':
-            self.pick_basic_direction_v2(snake)
-        elif snake.algorithm == 'astar':
-            self.pick_astar_direction(snake)
-        elif snake.algorithm == 'astar_v2':
-            self.pick_astar_direction_v2(snake)
+        # if snake.algorithm == 'dumb_v2':
+        #     self.pick_basic_direction_v2(snake)
+        # elif snake.algorithm == 'astar':
+        #     self.pick_astar_direction(snake)
+        # elif snake.algorithm == 'astar_v2':
+        #     self.pick_astar_direction_v2(snake)
+        
+        if snake.algorithm == 'ML':
+            self.pick_ML_direction(snake)
         elif snake.algorithm == 'custom':
             self.pick_custom_direction(snake)
 
@@ -628,22 +649,52 @@ def run_game_no_gui():
     new_game = Game(cells_x,cells_y)
     new_game.make_snake(2, False, "custom")
     game_over = False
+    step_count = 0
     while not game_over:
+        # This is the working game loop
         new_game.time_step()
+        step_count += 1
+
         if new_game.check_lose_states():
             game_over = True
-            for snake in new_game.AI_snakes:
-                snake_length = len(snake.coords)
-                print('finished game with length:', snake_length)
-                return snake_length
+            for snake in new_game.AI_snakes.union({new_game.ML_snake}):
+                if snake:
+                    snake_length = len(snake.coords)
+                    print('finished game with length:', snake_length)
+                    return snake_length
+
+def run_game_no_gui_ML():
+    new_game = Game(cells_x,cells_y)
+    new_game.make_snake(2, False, "ML")
+    game_over = False
+    step_count = 0
+    while not game_over:
+        # This is the working game loop
+        new_game.time_step()
+        step_count += 1
+
+        # To prevent infinite looping
+        if step_count > 100*len(new_game.ML_snake.coords):
+            game_over = True
+            print('Too many repetitions without eating!')
+            snake_length = len(new_game.ML_snake.coords)
+            print('finished game with length:', snake_length)
+            return snake_length
+
+        if new_game.check_lose_states():
+            game_over = True
+            snake_length = len(new_game.ML_snake.coords)
+            print('finished game with length:', snake_length)
+            return snake_length
+
 
 
 number_of_games = 100
 def main():
     lengths = []
     for i in range(number_of_games):
-        lengths.append(run_game_no_gui())
-    print(sum(lengths)/len(lengths))
+        lengths.append(run_game_no_gui_ML())
+    print('Average length over '+str(number_of_games)+' games:', sum(lengths)/len(lengths))
 
 
 if __name__ == '__main__':

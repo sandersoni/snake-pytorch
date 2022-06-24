@@ -83,14 +83,11 @@ def main():
     # game_run.make_snake(4, True)
 
     # makes an AI snake
-    # game_run.make_snake(15, False, "dumb_v2", (38,20))
-    # game_run.make_snake(5, False, "dumb_v2")
-    game_run.make_snake(2, False, "custom")
-    # game_run.make_snake(1, False, "astar_v2")
-    # game_run.make_snake(1, False, "astar_v2")
 
+    game_run.make_snake(2, False, "ML")
 
-    # game_run.make_snake(4, False, "astar", (39, 7))
+    # game_run.make_snake(2, False, "custom")
+
 
 
     game_over = False
@@ -118,14 +115,15 @@ def main():
             for segment in game_run.player_snake.coords:
                 draw_snake_cell(segment, game_run.player_snake.colour)
 
-        for snake in game_run.AI_snakes:
-            first = True
-            for segment in snake.coords:
-                if first == True:
-                    first = False
-                else:
-                    draw_snake_cell(segment, snake.colour)
-            draw_snake_head(snake.coords[0], snake.colour, snake.direction)
+        for snake in game_run.AI_snakes.union({game_run.ML_snake}):
+            if snake:
+                first = True
+                for segment in snake.coords:
+                    if first == True:
+                        first = False
+                    else:
+                        draw_snake_cell(segment, snake.colour)
+                draw_snake_head(snake.coords[0], snake.colour, snake.direction)
             
 
         for apple in game_run.apples:
