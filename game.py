@@ -1,17 +1,11 @@
-# import logging
-# LOGGER = logging.getLogger(__name__)
-
-# from multiprocessing import parent_process
 import random
 import math
 import numpy as np
-# from sympy import numbered_symbols
 
 random.seed()
 
 class Game:
     def __init__(self, cells_x, cells_y, apple_count = 1):
-        # print('Initialising')
         self.cells_x = cells_x
         self.cells_y = cells_y
         self.apple_count = 1
@@ -28,34 +22,9 @@ class Game:
         self.player_snake = False
 
         self.empty_space_persistent = self.whole_space
-        # self.empty_space_persistent_avoid_heads = self.whole_space
         
-
-    # def empty_space(self):
-    #     empty_space_result = self.whole_space
-    #     for snake in self.AI_snakes:
-    #         empty_space_result = empty_space_result - set(snake.coords)
-    #     if self.player_snake is not False:
-    #         empty_space_result = empty_space_result - set(self.player_snake.coords)
-    #     return empty_space_result
-
-    # def empty_space_avoid_other_heads(self, snake):
-    #     empty_space_result = self.empty_space_persistent
-    #     for other_snake in self.AI_snakes:
-    #         if snake != other_snake:
-    #             empty_space_result = empty_space_result - set([(other_snake.coords[0][0] + 1, other_snake.coords[0][1]), (other_snake.coords[0][0] - 1, other_snake.coords[0][1]), (other_snake.coords[0][0], other_snake.coords[0][1] + 1), (other_snake.coords[0][0], other_snake.coords[0][1] - 1)])
-    #     if self.player_snake is not False:
-    #         empty_space_result = empty_space_result - set([(self.player_snake.coords[0][0] + 1, self.player_snake.coords[0][1]), (self.player_snake.coords[0][0] - 1, self.player_snake.coords[0][1]), (self.player_snake.coords[0][0], self.player_snake.coords[0][1] + 1), (self.player_snake.coords[0][0], self.player_snake.coords[0][1] - 1)])
-
-    #     return empty_space_result
         
     def apple_spawn_locations(self):
-        # empty_space_result = self.whole_minus_edges - self.apples
-        # for snake in self.AI_snakes:
-        #     empty_space_result = empty_space_result - set(snake.coords)
-        # if self.player_snake is not False:
-        #     empty_space_result = empty_space_result - set(self.player_snake.coords)
-        # return empty_space_result
         return self.empty_space_persistent
 
     def make_apple(self):
@@ -65,7 +34,6 @@ class Game:
         pass
 
     def make_snake(self, length = 4, player = False, algorithm = None, head_coords = None):
-        # print('Making a snake')
         new_snake = self.Snake()
         new_snake.dead = False
         new_snake.algorithm = algorithm
@@ -77,32 +45,20 @@ class Game:
         y_dist = self.cells_y/2. - head_coords_try[1]
         if abs(x_dist) < abs(y_dist):
             if x_dist < 0:
-                # print('going negative x')
                 new_snake.direction = (-1, 0)
             else:
-                # print('going positive x')
                 new_snake.direction = (1, 0)
         else:
             if y_dist < 0:
-                # print('going negative y')
                 new_snake.direction = (0, -1)
             else:
-                # print('going positive y')
                 new_snake.direction = (0, 1)
 
         new_snake.coords = []
         new_snake.coords.append(head_coords_try)
         while len(new_snake.coords) < length:
             new_snake.coords.append((new_snake.coords[-1][0] - new_snake.direction[0], new_snake.coords[-1][1] - new_snake.direction[1]))
-            # print('adding segment at ', new_snake.coords[-1])
-
-        # self.empty_space_persistent = self.empty_space_persistent - set(new_snake.coords + [(new_snake.coords[0][0] + 1, new_snake.coords[0][1]), (new_snake.coords[0][0] - 1, new_snake.coords[0][1]), (new_snake.coords[0][0], new_snake.coords[0][1] + 1), (new_snake.coords[0][0], new_snake.coords[0][1] - 1)])
-
         self.empty_space_persistent = self.empty_space_persistent - set(new_snake.coords)
-
-        # print('New empty space avoid heads is ', self.empty_space_persistent_avoid_heads)
-
-
         new_snake.colour = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
         if player:
@@ -127,7 +83,6 @@ class Game:
                 snake.coords.insert(0, (snake.coords[0][0] + snake.direction[0], snake.coords[0][1] + snake.direction[1]))
                 self.empty_space_persistent = self.empty_space_persistent - set([snake.coords[0]])
                 if snake.coords[0] in self.apples:
-                    # print('snake eating apple at ', snake.coords[0], ', new length: ', len(snake.coords))
                     self.apples.remove(snake.coords[0])
                 else:
                     self.empty_space_persistent.add(snake.coords[-1])
@@ -146,35 +101,29 @@ class Game:
         for snake in self.AI_snakes.union({self.ML_snake}):
             if snake:
                 if snake.coords[0][0] < 0 or snake.coords[0][0] >= self.cells_x or snake.coords[0][1] < 0 or snake.coords[0][1] >= self.cells_y:
-                    # print('AI wall collision!')
                     snake.dead = True
 
                 for other_snake in self.AI_snakes.union({self.ML_snake}):
                     if other_snake:
                         if snake != other_snake:
                             if snake.coords[0] in other_snake.coords:
-                                # print('AI snake collision!')
                                 snake.dead = True
 
                         else:
                             if snake.coords[0] in snake.coords[1:]:
-                                # print('AI collided with self!')
                                 snake.dead = True
 
 
                 if self.player_snake is not False:
                     if snake[0] in self.player_snake.coords:
-                        # print('AI collided with player!')
                         snake.dead = True
 
         # check for player collisions
         if self.player_snake is not False:
             if self.player_snake.coords[0][0] < 0 or self.player_snake.coords[0][0] > self.cells_x or self.player_snake.coords[0][1] < 0 or self.player_snake.coords[0][1] > self.cells_y:
-                # print('Player wall collision!')
                 self.player_snake.dead = True
 
             if self.player_snake.coords[0] in self.player_snake.coords[1:]:
-                # print('Player collided with self!')
                 self.player_snake.dead = True
 
 
@@ -224,8 +173,6 @@ class Game:
 
         if possible_moves != []:
             snake.direction = random.choice(possible_moves)
-        # else:
-        #     print('No possible moves!')
 
     # This chooses a random direction even if it means running into a wall or self
     def pick_random_direction_no_safe(self, snake):
@@ -253,9 +200,7 @@ class Game:
                         shortest_distance = self.distance_to_apple_manhattan(new_spot, apple)
         if possible_moves != []:
             snake.direction = random.choice(possible_moves)
-        # else:
-        #     print('No possible moves!')
-            
+
     def pick_basic_direction_v2(self, snake):
         possible_moves = []
         shortest_distance = self.cells_x*self.cells_y
@@ -272,7 +217,6 @@ class Game:
                         possible_moves = []
                         possible_moves.append(direction)
                         shortest_distance = self.distance_to_apple_manhattan(new_spot, apple)
-        # print('head at', snake.coords[0], ', possible moves: ', possible_moves)
         if possible_moves != []:
             snake.direction = random.choice(possible_moves)
         else:
@@ -294,191 +238,6 @@ class Game:
                 found_apple = apple
 
         return found_apple
-
-    # A-star stuff now
-
-    def draw_value(self, pygame, window, font, coords, value, window_width, window_height, cells_x, cells_y):
-        cells_x_pixels, cells_y_pixels = math.floor(window_width/cells_x), math.floor(window_height/cells_y)
-        text_surface = font.render(value, True, (255,255,255))
-        text_rect = text_surface.get_rect(center = (math.floor(coords[0]*cells_x_pixels + cells_x_pixels/2.), math.floor(coords[1]*cells_y_pixels + cells_y_pixels/2.)))
-        window.blit(text_surface, text_rect)
-        pygame.display.update()
-
-    class Node():
-        def __init__(self, parent=None, coords=None):
-            self.parent = parent
-            self.coords = coords
-            self.g = 0
-            self.h = 0
-            self.f = 0
-
-        def __eq__(self, other):
-            return self.coords == other.coords
-
-    def astar(self, start, end):#, pygame, window, font, window_width, window_height, cells_x, cells_y):
-        start_node = self.Node(None, start)
-        end_node = self.Node(None, end)
-        open_list = []
-        closed_list = []
-        open_list.append(start_node)
-
-        while len(open_list) > 0:
-            # print('while len(open_list) > 0 running')
-            current_node = open_list[0]
-            current_index = 0
-
-            for index,item in enumerate(open_list):
-                if item.f < current_node.f:
-                    current_node = item
-                    current_index = index
-            
-            open_list.pop(current_index)
-            closed_list.append(current_node)
-
-            if current_node == end_node:
-                path = []
-                current = current_node
-                while current is not None:
-                    path.append(current.coords)
-                    current = current.parent
-                return path[::-1]
-        
-            children = []
-            for new_position in [(1,0), (-1,0), (0,1), (0,-1)]:
-                node_position = (current_node.coords[0] + new_position[0], current_node.coords[1] + new_position[1])
-
-                # if node_position[0] < 0 or node_position[0] > self.cells_x - 1 or node_position[1] < 0 or node_position[1] > self.cells_y - 1:
-                #     continue
-
-                if node_position not in self.empty_space():
-                    continue
-                    
-                new_node = self.Node(current_node, node_position)
-
-                children.append(new_node)
-
-            for child in children:
-                skip = False
-                for closed_child in closed_list:
-                    if child == closed_child:
-                        skip = True
-                        # print('child ', child.coords, 'found in closed list')
-                        continue
-                if skip:
-                    continue
-
-                child.g = current_node.g + 1
-                child.h = ((child.coords[0] - end_node.coords[0]) ** 2) + ((child.coords[1] - end_node.coords[1]) ** 2)
-                child.f = child.g + child.h
-
-                for open_node in open_list:
-                    if child == open_node and child.g > open_node.g:
-                        continue
-
-                open_list.append(child)
-                # print('appending child ', child.coords)
-                # self.draw_value(pygame, window, font, child.coords, str(child.f), window_width, window_height, cells_x, cells_y)
-
-    def astar_avoid_heads(self, snake, end):#, pygame, window, font, window_width, window_height, cells_x, cells_y):
-        start = snake.coords[0]
-        start_node = self.Node(None, start)
-        end_node = self.Node(None, end)
-        open_list = []
-        closed_list = []
-        open_list.append(start_node)
-        empty_space = self.empty_space()
-        empty_space_avoid_heads = self.empty_space_avoid_other_heads(snake)
-
-        if end not in empty_space_avoid_heads:
-            possible_random_directions = []
-            for direction in [(1,0), (-1,0), (0,1), (0,-1)]:
-                if (snake.coords[0][0] + direction[0], snake.coords[0][1] + direction[1]) in empty_space_avoid_heads:
-                    possible_random_directions.append(direction)
-
-            if possible_random_directions != []:
-                snake.direction = random.choice(possible_random_directions)
-            
-            return None
-
-        while len(open_list) > 0:
-            # print('while len(open_list) > 0 running')
-            current_node = open_list[0]
-            current_index = 0
-
-            for index,item in enumerate(open_list):
-                if item.f < current_node.f:
-                    current_node = item
-                    current_index = index
-            
-            open_list.pop(current_index)
-            closed_list.append(current_node)
-
-            if current_node == end_node:
-                path = []
-                current = current_node
-                while current is not None:
-                    path.append(current.coords)
-                    current = current.parent
-                return path[::-1]
-        
-            children = []
-            for new_position in [(1,0), (-1,0), (0,1), (0,-1)]:
-                node_position = (current_node.coords[0] + new_position[0], current_node.coords[1] + new_position[1])
-
-                # if node_position[0] < 0 or node_position[0] > self.cells_x - 1 or node_position[1] < 0 or node_position[1] > self.cells_y - 1:
-                #     continue
-
-                if current_node.coords == snake.coords[0]:
-                    print('snake head is ', snake.coords[0], ', node position is ', node_position)
-                    if node_position not in empty_space_avoid_heads:
-                        print('node not in empty space avoid heads, skipping')
-                        continue
-                elif node_position not in empty_space:
-                    continue
-                    
-                new_node = self.Node(current_node, node_position)
-
-                children.append(new_node)
-
-            for child in children:
-                skip = False
-                for closed_child in closed_list:
-                    if child == closed_child:
-                        skip = True
-                        # print('child ', child.coords, 'found in closed list')
-                if skip:
-                    continue
-
-                child.g = current_node.g + 1
-                child.h = ((child.coords[0] - end_node.coords[0]) ** 2) + ((child.coords[1] - end_node.coords[1]) ** 2)
-                child.f = child.g + child.h
-
-                for open_node in open_list:
-                    if child == open_node and child.g > open_node.g:
-                        continue
-
-                open_list.append(child)
-                # print('appending child ', child.coords)
-                # self.draw_value(pygame, window, font, child.coords, str(child.f), window_width, window_height, cells_x, cells_y)
-    
-    def pick_astar_direction(self, snake):
-        target_apple = self.closest_apple_manhattan(snake)
-        if target_apple is not None:
-            path = self.astar(snake.coords[0], target_apple)
-            # print('snake head is ', snake.coords[0], ', path[0] is ', path[0])
-            snake.direction = (path[1][0] - snake.coords[0][0], path[1][1] - snake.coords[0][1])
-
-    def pick_astar_direction_v2(self, snake):
-        target_apple = self.closest_apple_manhattan(snake)
-        if target_apple is not None:
-            path = self.astar_avoid_heads(snake, target_apple)
-            # print('snake head is ', snake.coords[0], ', path[0] is ', path[0])
-            if path is not None:
-                snake.direction = (path[1][0] - snake.coords[0][0], path[1][1] - snake.coords[0][1])
-            else:
-                print('astar path not found!')
-                self.pick_random_direction(snake)
-
 
     def m_dist(pointA, pointB):
         return abs(pointA[0] - pointB[0]) + abs(pointA[1] - pointB[1])

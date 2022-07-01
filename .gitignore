@@ -9,3 +9,5 @@ __pycache__
 pyvenv.cfg
 .venv
 pip-selfcheck.json
+model/model.pth
+venv/share/man/man1/ttx.1

@@ -84,9 +84,8 @@ def main():
 
     # makes an AI snake
 
-    game_run.make_snake(2, False, "ML")
+    game_run.make_snake(2, False, "custom")
 
-    # game_run.make_snake(2, False, "custom")
 
 
 
